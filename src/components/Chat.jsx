@@ -1,23 +1,38 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import socket from '../socket';
 
-function Chat({users, messages}) {
-    const [messageValue, setMessageValue] = React.useState('');
+function Chat({ users, messages, userName, roomId, onAddMessage }) {
+    const [messageValue, setMessageValue] = useState('');
+    const messagesRef = useRef(null);
+
+    const onSendMessage = () => {
+        socket.emit('ROOM:NEW_MESSAGE', {
+            userName,
+            roomId,
+            text: messageValue,
+        });
+        onAddMessage({ userName, text: messageValue });
+        setMessageValue('');
+    };
+
+    useEffect(() => {
+        messagesRef.current.scrollTo(0, 99999);
+    }, [messages]);
 
     return (
         <div className="chat">
             <div className="chat-users">
-                Комната: <b>{}</b>
+                Комната: <b>{roomId}</b>
                 <hr />
                 <b>Онлайн ({users.length}):</b>
                 <ul>
-                    {users.map((user, index) => (
-                        <li key={user + index}>{user}</li>
+                    {users.map((name, index) => (
+                        <li key={name + index}>{name}</li>
                     ))}
                 </ul>
             </div>
             <div className="chat-messages">
-                <div className="messages">
+                <div ref={messagesRef} className="messages">
                     {messages.map((message) => (
                         <div className="message">
                             <p>{message.text}</p>
@@ -33,7 +48,7 @@ function Chat({users, messages}) {
               onChange={(e) => setMessageValue(e.target.value)}
               className="form-control"
               rows="3"/>
-                    <button type="button" className="btn btn-primary">
+                    <button onClick={onSendMessage} type="button" className="btn btn-primary">
                         Отправить
                     </button>
                 </form>

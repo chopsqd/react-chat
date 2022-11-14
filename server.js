@@ -25,7 +25,21 @@ app.post('/rooms', (req, res) => {
 })
 
 io.on('connection', socket => {
-    console.log('user connected', socket.id)
+    socket.on('ROOM:JOIN', ({roomId, userName}) => {
+        socket.join(roomId)
+        rooms.get(roomId).get('users').set(socket.id, userName)
+        const users = [...rooms.get(roomId).get('users').values()]
+        socket.to(roomId).broadcast.emit('ROOM:JOINED', users)
+    })
+
+    socket.on('disconnect', () => {
+        rooms.forEach((value, roomId) => {
+            if(value.get('users').delete(socket.id)) {
+                const users = [...value.get(roomId).get('users').values()]
+                socket.to(roomId).broadcast.emit('ROOM:SET_USERS', users)
+            }
+        })
+    })
 })
 
 server.listen(PORT, (error) => {

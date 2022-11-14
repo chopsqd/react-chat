@@ -11,12 +11,13 @@ function JoinBlock({onLogin}) {
             return alert('Неверные данные')
         }
 
+        const obj = {
+            roomId, userName
+        }
         setIsLoading(true)
 
-        await axios.post('/rooms',{
-            roomId, userName
-        })
-        onLogin()
+        await axios.post('/rooms',obj)
+        onLogin(obj)
 
     }
 
